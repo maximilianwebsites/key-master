@@ -396,6 +396,78 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
+        /* --- Inline mode bar (test mode toggle + key filter) --- */
+        .mode-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-switch-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .toggle-label {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #777;
+            transition: color 0.2s;
+        }
+
+        .toggle-label.active-label {
+            color: var(--text-color);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--primary);
+            border: 2px solid var(--primary);
+            transition: 0.25s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.25s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--text-color);
+            border-color: var(--text-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
         /* --- Rush Mode view toggling --- */
         #rushDashboard {
             display: none;
@@ -419,6 +491,10 @@
 
         body.rush-active #rushControls {
             display: flex;
+        }
+
+        body.rush-active #modeBar {
+            display: none;
         }
     </style>
 </head>
@@ -500,12 +576,27 @@
             </select>
             <button class="action-btn" onclick="randomizeKey()" style="background-color: var(--primary); box-shadow: 0 4px 0 #0a2444;">Shuffle</button>
             <button class="action-btn" onclick="openRushSetup()" style="background-color: var(--gold); color: #1a1a2e; box-shadow: 0 4px 0 #b8960c;">⚡ Rush</button>
-            <button class="action-btn help-btn" onclick="openSettings()" title="Settings">⚙️</button>
             <button class="action-btn help-btn" onclick="openHelp()" title="Cheat Sheet">❓</button>
         </div>
         <div class="control-buttons" id="rushControls">
             <button class="action-btn" onclick="endRush()" style="background-color: #555; box-shadow: 0 4px 0 #333;">✕ End Rush</button>
         </div>
+    </div>
+
+    <div class="mode-bar" id="modeBar">
+        <div class="toggle-switch-wrap">
+            <span class="toggle-label" id="scaleLabel">Scale</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="testModeToggle" checked onchange="toggleTestMode()">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label" id="chordsLabel">Chords</span>
+        </div>
+        <select id="keyFilterSelect" onchange="onKeyFilterChange()">
+            <option value="all">All Keys</option>
+            <option value="major">Major Only</option>
+            <option value="minor">Minor Only</option>
+        </select>
     </div>
 
     <div class="section" id="scaleSection">
@@ -571,33 +662,6 @@
             <li><strong>7th:</strong> Major</li>
         </ul>
         <p style="text-align: center; color: #888; font-size: 0.9rem; margin-top: 20px;">Click anywhere outside this box to close it.</p>
-    </div>
-</div>
-
-<!-- Settings Modal -->
-<div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeSettings()">&times;</span>
-        <h3>⚙️ Settings</h3>
-
-        <div class="settings-group">
-            <label class="settings-label">Key Types</label>
-            <div class="pill-group" id="keyFilterPills">
-                <button type="button" class="pill-btn" data-value="all" onclick="setKeyFilter('all')">All Keys</button>
-                <button type="button" class="pill-btn" data-value="major" onclick="setKeyFilter('major')">Major Only</button>
-                <button type="button" class="pill-btn" data-value="minor" onclick="setKeyFilter('minor')">Minor Only</button>
-            </div>
-        </div>
-
-        <div class="settings-group">
-            <label class="settings-label">Test On</label>
-            <div class="pill-group" id="testModePills">
-                <button type="button" class="pill-btn" data-value="both" onclick="setTestMode('both')">Scale + Chords</button>
-                <button type="button" class="pill-btn" data-value="scale" onclick="setTestMode('scale')">Scale Only</button>
-                <button type="button" class="pill-btn" data-value="chords" onclick="setTestMode('chords')">Chords Only</button>
-            </div>
-        </div>
-        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-top: 1.5rem;">Click anywhere outside this box to close it.</p>
     </div>
 </div>
 
@@ -680,8 +744,8 @@
 
     // Settings: which keys and which question types to be tested on
     let settings = {
-        keyFilter: 'all',   // 'all' | 'major' | 'minor'
-        testMode: 'both'    // 'both' | 'scale' | 'chords'
+        keyFilter: 'all',     // 'all' | 'major' | 'minor'
+        testMode: 'chords'    // 'scale' | 'chords'
     };
 
     // Rush mode state
@@ -694,7 +758,6 @@
 
     // --- Modal Logic ---
     const helpModal = document.getElementById("helpModal");
-    const settingsModal = document.getElementById("settingsModal");
     const rushModal = document.getElementById("rushModal");
 
     function openHelp() {
@@ -703,20 +766,10 @@
     function closeHelp() {
         helpModal.style.display = "none";
     }
-    function openSettings() {
-        updateSettingsPillStates();
-        settingsModal.style.display = "flex";
-    }
-    function closeSettings() {
-        settingsModal.style.display = "none";
-    }
     // Close modal when clicking outside of it
     window.onclick = function(event) {
         if (event.target == helpModal) {
             closeHelp();
-        }
-        if (event.target == settingsModal) {
-            closeSettings();
         }
         if (event.target == rushModal) {
             closeRushModal();
@@ -764,13 +817,20 @@
         localStorage.setItem('musicTrainerSettings', JSON.stringify(settings));
     }
 
-    function updateSettingsPillStates() {
-        document.querySelectorAll('#keyFilterPills .pill-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.value === settings.keyFilter);
-        });
-        document.querySelectorAll('#testModePills .pill-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.value === settings.testMode);
-        });
+    function applyTestModeUI() {
+        const isChords = settings.testMode === 'chords';
+        document.getElementById('testModeToggle').checked = isChords;
+        document.getElementById('scaleLabel').classList.toggle('active-label', !isChords);
+        document.getElementById('chordsLabel').classList.toggle('active-label', isChords);
+    }
+
+    function toggleTestMode() {
+        const isChords = document.getElementById('testModeToggle').checked;
+        settings.testMode = isChords ? 'chords' : 'scale';
+        saveSettings();
+        applyTestModeUI();
+        applyTestModeToSections();
+        resetBoard();
     }
 
     function applyKeyFilterToDropdown() {
@@ -791,10 +851,10 @@
         });
     }
 
-    function setKeyFilter(value) {
+    function onKeyFilterChange() {
+        const value = document.getElementById('keyFilterSelect').value;
         settings.keyFilter = value;
         saveSettings();
-        updateSettingsPillStates();
         applyKeyFilterToDropdown();
 
         const current = document.getElementById('keySelect').value;
@@ -803,14 +863,6 @@
         if (!stillValid) {
             randomizeKey();
         }
-    }
-
-    function setTestMode(value) {
-        settings.testMode = value;
-        saveSettings();
-        updateSettingsPillStates();
-        applyTestModeToSections();
-        resetBoard();
     }
 
     // --- Rush Mode: load/save ---
@@ -868,16 +920,17 @@
 
         document.addEventListener('keypress', function (e) {
             // Don't trigger check if any modal is open
-            if (e.key === 'Enter' && helpModal.style.display !== "flex" && settingsModal.style.display !== "flex" && rushModal.style.display !== "flex") {
+            if (e.key === 'Enter' && helpModal.style.display !== "flex" && rushModal.style.display !== "flex") {
                 checkAnswers();
             }
         });
 
         loadSettings();
         loadRushData();
+        document.getElementById('keyFilterSelect').value = settings.keyFilter;
         applyKeyFilterToDropdown();
         applyTestModeToSections();
-        updateSettingsPillStates();
+        applyTestModeUI();
         updateRushDurationPillStates();
 
         loadStats();
