@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Master - The Game</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --text-color: #e94560;
+            --text-light: #fff;
+            --primary: #0f3460;
+            --primary-hover: #e94560;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --neutral: #535c68;
+            --gold: #f1c40f;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 850px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* --- Gamified Dashboard --- */
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--primary);
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+
+        .xp-container {
+            flex-grow: 1;
+            margin: 0 2rem;
+        }
+
+        .xp-bar-bg {
+            height: 12px;
+            background: #222;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #444;
+            margin-top: 5px;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #ff6b81);
+            width: 0%;
+            transition: width 0.4s ease-out;
+        }
+
+        /* --- Controls --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .target-key-display {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--text-color);
+            margin: 0;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+        }
+
+        select, button {
+            padding: 0.7rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select {
+            background: var(--primary);
+            color: white;
+        }
+
+        button.action-btn {
+            background-color: var(--text-color);
+            color: white;
+            transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 4px 0 #a22b3e;
+        }
+
+        button.action-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #a22b3e;
+        }
+
+        .help-btn {
+            background-color: var(--neutral) !important;
+            box-shadow: 0 4px 0 #333 !important;
+        }
+
+        /* --- Input Sections --- */
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 60px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 0.4rem;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0.8rem 0;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: #111;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--text-color);
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+        }
+
+        /* --- States & Animations --- */
+        .correct {
+            background-color: rgba(46, 204, 113, 0.2) !important;
+            border-color: var(--success) !important;
+            color: var(--success) !important;
+            pointer-events: none;
+        }
+
+        .incorrect {
+            border-color: var(--error) !important;
+            background-color: rgba(231, 76, 60, 0.1) !important;
+            color: var(--error) !important;
+            animation: shake 0.4s;
+        }
+
+        .revealed {
+            border-color: var(--neutral) !important;
+            color: #aaa !important;
+            pointer-events: none;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* --- Lower Buttons --- */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            border-top: 1px solid #333;
+            padding-top: 1.5rem;
+        }
+
+        .shortcut-hint {
+            display: block;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 1rem;
+        }
+
+        /* --- Confetti --- */
+        .confetti {
+            position: fixed;
+            font-size: 1.5rem;
+            user-select: none;
+            pointer-events: none;
+            animation: fall linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- Help Modal --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            line-height: 1.6;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .modal-content h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-content ul {
+            padding-left: 20px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .highlight {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* --- Settings & Rush Modals --- */
+        .settings-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-group:last-of-type {
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-label {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 0.6rem;
+            font-weight: bold;
+        }
+
+        .pill-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-btn {
+            padding: 0.55rem 1rem;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: #ccc;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill-btn:hover {
+            border-color: var(--text-color);
+            color: #fff;
+        }
+
+        .pill-btn.active {
+            background: var(--text-color);
+            border-color: var(--text-color);
+            color: #fff;
+        }
+
+        .rush-highscore {
+            text-align: center;
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 0.6rem;
+            color: var(--gold);
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+        .rush-final-score {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin: 0.25rem 0;
+        }
+
+        .rush-timer {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- Rush Mode view toggling --- */
+        #rushDashboard {
+            display: none;
+        }
+
+        #rushControls {
+            display: none;
+        }
+
+        body.rush-active #mainDashboard {
+            display: none;
+        }
+
+        body.rush-active #rushDashboard {
+            display: flex;
+        }
+
+        body.rush-active #practiceControls {
+            display: none;
+        }
+
+        body.rush-active #rushControls {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="dashboard" id="mainDashboard">
+        <div class="stat-box">
+            <div class="stat-label">Level <span id="levelDisplay">1</span></div>
+            <div class="stat-value" id="rankDisplay" style="font-size: 1.2rem; color: #fff;">Novice</div>
+        </div>
+        
+        <div class="xp-container">
+            <div style="display: flex; justify-content: space-between;">
+                <span class="stat-label">XP</span>
+                <span class="stat-label" id="xpText">0 / 100</span>
+            </div>
+            <div class="xp-bar-bg">
+                <div class="xp-bar-fill" id="xpBar"></div>
+            </div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-label">Streak</div>
+            <div class="stat-value">🔥 <span id="streakDisplay">0</span></div>
+            <div style="font-size: 0.7rem; color: #666;">Best: <span id="bestStreakDisplay">0</span></div>
+        </div>
+    </div>
+
+    <div class="dashboard" id="rushDashboard">
+        <div class="stat-box">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="rushScoreDisplay">0</div>
+        </div>
+
+        <div class="xp-container" style="text-align: center;">
+            <span class="stat-label">⏱ Time Left</span>
+            <div class="rush-timer" id="rushTimerDisplay">60</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-label">🏆 Best</div>
+            <div class="stat-value" id="rushBestDisplay" style="color: #fff;">0</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <h1 class="target-key-display" id="targetKeyTitle">C Major</h1>
+        <div class="control-buttons" id="practiceControls">
+            <select id="keySelect" onchange="manualKeySelect()">
+                <optgroup label="Major Keys" id="majorOptGroup">
+                    <option value="C">C Major</option>
+                    <option value="G">G Major</option>
+                    <option value="D">D Major</option>
+                    <option value="A">A Major</option>
+                    <option value="E">E Major</option>
+                    <option value="B">B Major</option>
+                    <option value="F#">F# Major</option>
+                    <option value="F">F Major</option>
+                    <option value="Bb">Bb Major</option>
+                    <option value="Eb">Eb Major</option>
+                    <option value="Ab">Ab Major</option>
+                    <option value="Db">Db Major</option>
+                </optgroup>
+                <optgroup label="Minor Keys" id="minorOptGroup">
+                    <option value="Am">A Minor</option>
+                    <option value="Em">E Minor</option>
+                    <option value="Bm">B Minor</option>
+                    <option value="F#m">F# Minor</option>
+                    <option value="C#m">C# Minor</option>
+                    <option value="G#m">G# Minor</option>
+                    <option value="D#m">D# Minor</option>
+                    <option value="Dm">D Minor</option>
+                    <option value="Gm">G Minor</option>
+                    <option value="Cm">C Minor</option>
+                    <option value="Fm">F Minor</option>
+                    <option value="Bbm">Bb Minor</option>
+                </optgroup>
+            </select>
+            <button class="action-btn" onclick="randomizeKey()" style="background-color: var(--primary); box-shadow: 0 4px 0 #0a2444;">Shuffle</button>
+            <button class="action-btn" onclick="openRushSetup()" style="background-color: var(--gold); color: #1a1a2e; box-shadow: 0 4px 0 #b8960c;">⚡ Rush</button>
+            <button class="action-btn help-btn" onclick="openSettings()" title="Settings">⚙️</button>
+            <button class="action-btn help-btn" onclick="openHelp()" title="Cheat Sheet">❓</button>
+        </div>
+        <div class="control-buttons" id="rushControls">
+            <button class="action-btn" onclick="endRush()" style="background-color: #555; box-shadow: 0 4px 0 #333;">✕ End Rush</button>
+        </div>
+    </div>
+
+    <div class="section" id="scaleSection">
+        <h2>Spell the Scale (Use # or b)</h2>
+        <div class="input-row" id="notesRow"></div>
+    </div>
+
+    <div class="section" id="chordsSection">
+        <h2>Spell the Chords (Add 'm' or 'dim')</h2>
+        <div class="input-row" id="chordsRow"></div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="action-btn" id="giveUpBtn" onclick="handleGiveUpClick()" style="background-color: #555; box-shadow: 0 4px 0 #333;">Give Up</button>
+        <button class="action-btn" onclick="checkAnswers()" style="background-color: var(--success); box-shadow: 0 4px 0 #208d4e; font-size: 1.2rem; padding: 0.8rem 2rem;">CHECK ANSWERS</button>
+    </div>
+    <span class="shortcut-hint">Press <strong>Enter</strong> to instantly check your answers</span>
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeHelp()">&times;</span>
+        <h3>1. How to find the Notes (Sharps & Flats)</h3>
+        <p><strong>The Sharps Rhyme:</strong> <span class="highlight">F</span>ather <span class="highlight">C</span>harles <span class="highlight">G</span>oes <span class="highlight">D</span>own <span class="highlight">A</span>nd <span class="highlight">E</span>nds <span class="highlight">B</span>attle</p>
+        <ul>
+            <li>Go exactly <strong>one half-step DOWN</strong> from the key you want. That note is your LAST sharp.</li>
+            <li><em>Example for A Major:</em> Half-step down is G#. Say the rhyme up to G: F, C, G. The sharps are F#, C#, G#.</li>
+        </ul>
+
+        <p><strong>The Flats Rhyme:</strong> <span class="highlight">B</span>attle <span class="highlight">E</span>nds <span class="highlight">A</span>nd <span class="highlight">D</span>own <span class="highlight">G</span>oes <span class="highlight">C</span>harles' <span class="highlight">F</span>ather</p>
+        <ul>
+            <li>Find your key in the rhyme, then go <strong>ONE FLAT PAST IT</strong>. That is your last flat.</li>
+            <li><em>Example for Eb Major:</em> Find E (Battle, Ends...), go one past it (And = A). The flats are Bb, Eb, Ab.</li>
+            <li><em>Exception:</em> F Major has one flat (Bb).</li>
+        </ul>
+
+        <p><strong>For Minor Keys:</strong> every minor key shares its key signature with a "relative major" found <strong>3 half-steps UP</strong> from the minor root. Work out that major key's sharps/flats using the rhymes above, then simply start (and end) the scale on the minor root instead.</p>
+        <ul>
+            <li><em>Example for E Minor:</em> 3 half-steps up from E is G. G Major has one sharp (F#). So E Minor is E, F#, G, A, B, C, D — same sharp, new starting note.</li>
+        </ul>
+
+        <h3>2. How to find the Chords</h3>
+        <p>Every <strong>major</strong> key follows the exact same pattern of major, minor, and diminished chords. Just apply this formula to the 7 notes you figured out in Step 1:</p>
+        <ul>
+            <li><strong>1st:</strong> Major</li>
+            <li><strong>2nd:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>3rd:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>4th:</strong> Major</li>
+            <li><strong>5th:</strong> Major</li>
+            <li><strong>6th:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>7th:</strong> diminished <span class="highlight">(add 'dim')</span></li>
+        </ul>
+
+        <p>Every <strong>natural minor</strong> key follows its own consistent pattern instead:</p>
+        <ul>
+            <li><strong>1st:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>2nd:</strong> diminished <span class="highlight">(add 'dim')</span></li>
+            <li><strong>3rd:</strong> Major</li>
+            <li><strong>4th:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>5th:</strong> minor <span class="highlight">(add 'm')</span></li>
+            <li><strong>6th:</strong> Major</li>
+            <li><strong>7th:</strong> Major</li>
+        </ul>
+        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-top: 20px;">Click anywhere outside this box to close it.</p>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeSettings()">&times;</span>
+        <h3>⚙️ Settings</h3>
+
+        <div class="settings-group">
+            <label class="settings-label">Key Types</label>
+            <div class="pill-group" id="keyFilterPills">
+                <button type="button" class="pill-btn" data-value="all" onclick="setKeyFilter('all')">All Keys</button>
+                <button type="button" class="pill-btn" data-value="major" onclick="setKeyFilter('major')">Major Only</button>
+                <button type="button" class="pill-btn" data-value="minor" onclick="setKeyFilter('minor')">Minor Only</button>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <label class="settings-label">Test On</label>
+            <div class="pill-group" id="testModePills">
+                <button type="button" class="pill-btn" data-value="both" onclick="setTestMode('both')">Scale + Chords</button>
+                <button type="button" class="pill-btn" data-value="scale" onclick="setTestMode('scale')">Scale Only</button>
+                <button type="button" class="pill-btn" data-value="chords" onclick="setTestMode('chords')">Chords Only</button>
+            </div>
+        </div>
+        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-top: 1.5rem;">Click anywhere outside this box to close it.</p>
+    </div>
+</div>
+
+<!-- Rush Mode Modal (Setup + Results) -->
+<div id="rushModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeRushModal()">&times;</span>
+
+        <div id="rushSetupView">
+            <h3>⚡ Rush Mode</h3>
+            <p style="color: #ccc;">Answer as many keys correctly as you can before time runs out!</p>
+
+            <div class="settings-group">
+                <label class="settings-label">Duration</label>
+                <div class="pill-group" id="rushDurationPills">
+                    <button type="button" class="pill-btn" data-value="30" onclick="setRushDuration(30)">30s</button>
+                    <button type="button" class="pill-btn" data-value="60" onclick="setRushDuration(60)">60s</button>
+                    <button type="button" class="pill-btn" data-value="90" onclick="setRushDuration(90)">90s</button>
+                </div>
+            </div>
+
+            <div class="rush-highscore">🏆 Best: <span id="rushHighScoreDisplay">0</span> correct</div>
+
+            <button class="action-btn" onclick="startRush()" style="width: 100%; margin-top: 1.5rem; background-color: var(--gold); color: #1a1a2e; box-shadow: 0 4px 0 #b8960c; font-size: 1.1rem; padding: 0.9rem;">Start Rush ⚡</button>
+        </div>
+
+        <div id="rushResultsView" style="display: none; text-align: center;">
+            <h3 id="rushResultsTitle" style="border-bottom: none;">Time's Up!</h3>
+            <div class="rush-final-score" id="rushFinalScore">0</div>
+            <p style="color: #ccc; margin-top: 0;">correct answers</p>
+            <p id="rushHighScoreNote" style="color: var(--gold); font-weight: bold; min-height: 1.2em;"></p>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                <button class="action-btn" onclick="closeRushModal()" style="flex: 1; background-color: #555; box-shadow: 0 4px 0 #333;">Back to Practice</button>
+                <button class="action-btn" onclick="startRush()" style="flex: 1; background-color: var(--gold); color: #1a1a2e; box-shadow: 0 4px 0 #b8960c;">Try Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Data ---
+    const keysData = {
+        "C":  { notes: ["C", "D", "E", "F", "G", "A", "B"], chords: ["C", "Dm", "Em", "F", "G", "Am", "Bdim"] },
+        "G":  { notes: ["G", "A", "B", "C", "D", "E", "F#"], chords: ["G", "Am", "Bm", "C", "D", "Em", "F#dim"] },
+        "D":  { notes: ["D", "E", "F#", "G", "A", "B", "C#"], chords: ["D", "Em", "F#m", "G", "A", "Bm", "C#dim"] },
+        "A":  { notes: ["A", "B", "C#", "D", "E", "F#", "G#"], chords: ["A", "Bm", "C#m", "D", "E", "F#m", "G#dim"] },
+        "E":  { notes: ["E", "F#", "G#", "A", "B", "C#", "D#"], chords: ["E", "F#m", "G#m", "A", "B", "C#m", "D#dim"] },
+        "B":  { notes: ["B", "C#", "D#", "E", "F#", "G#", "A#"], chords: ["B", "C#m", "D#m", "E", "F#", "G#m", "A#dim"] },
+        "F#": { notes: ["F#", "G#", "A#", "B", "C#", "D#", "E#"], chords: ["F#", "G#m", "A#m", "B", "C#", "D#m", "E#dim"] },
+        "F":  { notes: ["F", "G", "A", "Bb", "C", "D", "E"], chords: ["F", "Gm", "Am", "Bb", "C", "Dm", "Edim"] },
+        "Bb": { notes: ["Bb", "C", "D", "Eb", "F", "G", "A"], chords: ["Bb", "Cm", "Dm", "Eb", "F", "Gm", "Adim"] },
+        "Eb": { notes: ["Eb", "F", "G", "Ab", "Bb", "C", "D"], chords: ["Eb", "Fm", "Gm", "Ab", "Bb", "Cm", "Ddim"] },
+        "Ab": { notes: ["Ab", "Bb", "C", "Db", "Eb", "F", "G"], chords: ["Ab", "Bbm", "Cm", "Db", "Eb", "Fm", "Gdim"] },
+        "Db": { notes: ["Db", "Eb", "F", "Gb", "Ab", "Bb", "C"], chords: ["Db", "Ebm", "Fm", "Gb", "Ab", "Bbm", "Cdim"] },
+        // Natural minor keys
+        "Am":  { notes: ["A", "B", "C", "D", "E", "F", "G"], chords: ["Am", "Bdim", "C", "Dm", "Em", "F", "G"] },
+        "Em":  { notes: ["E", "F#", "G", "A", "B", "C", "D"], chords: ["Em", "F#dim", "G", "Am", "Bm", "C", "D"] },
+        "Bm":  { notes: ["B", "C#", "D", "E", "F#", "G", "A"], chords: ["Bm", "C#dim", "D", "Em", "F#m", "G", "A"] },
+        "F#m": { notes: ["F#", "G#", "A", "B", "C#", "D", "E"], chords: ["F#m", "G#dim", "A", "Bm", "C#m", "D", "E"] },
+        "C#m": { notes: ["C#", "D#", "E", "F#", "G#", "A", "B"], chords: ["C#m", "D#dim", "E", "F#m", "G#m", "A", "B"] },
+        "G#m": { notes: ["G#", "A#", "B", "C#", "D#", "E", "F#"], chords: ["G#m", "A#dim", "B", "C#m", "D#m", "E", "F#"] },
+        "D#m": { notes: ["D#", "E#", "F#", "G#", "A#", "B", "C#"], chords: ["D#m", "E#dim", "F#", "G#m", "A#m", "B", "C#"] },
+        "Dm":  { notes: ["D", "E", "F", "G", "A", "Bb", "C"], chords: ["Dm", "Edim", "F", "Gm", "Am", "Bb", "C"] },
+        "Gm":  { notes: ["G", "A", "Bb", "C", "D", "Eb", "F"], chords: ["Gm", "Adim", "Bb", "Cm", "Dm", "Eb", "F"] },
+        "Cm":  { notes: ["C", "D", "Eb", "F", "G", "Ab", "Bb"], chords: ["Cm", "Ddim", "Eb", "Fm", "Gm", "Ab", "Bb"] },
+        "Fm":  { notes: ["F", "G", "Ab", "Bb", "C", "Db", "Eb"], chords: ["Fm", "Gdim", "Ab", "Bbm", "Cm", "Db", "Eb"] },
+        "Bbm": { notes: ["Bb", "C", "Db", "Eb", "F", "Gb", "Ab"], chords: ["Bbm", "Cdim", "Db", "Ebm", "Fm", "Gb", "Ab"] }
+    };
+
+    const ranks = ["Novice", "Apprentice", "Journeyman", "Adept", "Expert", "Master", "Virtuoso", "Legend"];
+
+    // --- State ---
+    let stats = {
+        xp: 0,
+        level: 1,
+        currentStreak: 0,
+        bestStreak: 0
+    };
+    let attemptsOnCurrentKey = 0;
+
+    // Settings: which keys and which question types to be tested on
+    let settings = {
+        keyFilter: 'all',   // 'all' | 'major' | 'minor'
+        testMode: 'both'    // 'both' | 'scale' | 'chords'
+    };
+
+    // Rush mode state
+    let rushActive = false;
+    let rushScore = 0;
+    let rushDuration = 60;
+    let rushTimeLeft = 0;
+    let rushTimerInterval = null;
+    let rushHighScores = { 30: 0, 60: 0, 90: 0 };
+
+    // --- Modal Logic ---
+    const helpModal = document.getElementById("helpModal");
+    const settingsModal = document.getElementById("settingsModal");
+    const rushModal = document.getElementById("rushModal");
+
+    function openHelp() {
+        helpModal.style.display = "flex";
+    }
+    function closeHelp() {
+        helpModal.style.display = "none";
+    }
+    function openSettings() {
+        updateSettingsPillStates();
+        settingsModal.style.display = "flex";
+    }
+    function closeSettings() {
+        settingsModal.style.display = "none";
+    }
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        if (event.target == helpModal) {
+            closeHelp();
+        }
+        if (event.target == settingsModal) {
+            closeSettings();
+        }
+        if (event.target == rushModal) {
+            closeRushModal();
+        }
+    }
+
+    // --- Initialization & Save Logic ---
+    function loadStats() {
+        const saved = localStorage.getItem('musicTrainerStats');
+        if (saved) {
+            stats = JSON.parse(saved);
+        }
+        updateDashboard();
+    }
+
+    function saveStats() {
+        localStorage.setItem('musicTrainerStats', JSON.stringify(stats));
+        updateDashboard();
+    }
+
+    function updateDashboard() {
+        stats.level = Math.floor(stats.xp / 100) + 1;
+        let rankIndex = Math.min(stats.level - 1, ranks.length - 1);
+        
+        let xpInCurrentLevel = stats.xp % 100;
+        let progressPercent = (xpInCurrentLevel / 100) * 100;
+
+        document.getElementById('levelDisplay').innerText = stats.level;
+        document.getElementById('rankDisplay').innerText = ranks[rankIndex];
+        document.getElementById('streakDisplay').innerText = stats.currentStreak;
+        document.getElementById('bestStreakDisplay').innerText = stats.bestStreak;
+        document.getElementById('xpText').innerText = `${xpInCurrentLevel} / 100`;
+        document.getElementById('xpBar').style.width = `${progressPercent}%`;
+    }
+
+    // --- Settings: load/save/apply ---
+    function loadSettings() {
+        const saved = localStorage.getItem('musicTrainerSettings');
+        if (saved) {
+            settings = Object.assign(settings, JSON.parse(saved));
+        }
+    }
+
+    function saveSettings() {
+        localStorage.setItem('musicTrainerSettings', JSON.stringify(settings));
+    }
+
+    function updateSettingsPillStates() {
+        document.querySelectorAll('#keyFilterPills .pill-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === settings.keyFilter);
+        });
+        document.querySelectorAll('#testModePills .pill-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === settings.testMode);
+        });
+    }
+
+    function applyKeyFilterToDropdown() {
+        document.getElementById('majorOptGroup').style.display = (settings.keyFilter === 'minor') ? 'none' : '';
+        document.getElementById('minorOptGroup').style.display = (settings.keyFilter === 'major') ? 'none' : '';
+    }
+
+    function applyTestModeToSections() {
+        document.getElementById('scaleSection').style.display = (settings.testMode === 'chords') ? 'none' : '';
+        document.getElementById('chordsSection').style.display = (settings.testMode === 'scale') ? 'none' : '';
+    }
+
+    function getFilteredKeyList() {
+        return Object.keys(keysData).filter(k => {
+            if (settings.keyFilter === 'major') return !k.endsWith('m');
+            if (settings.keyFilter === 'minor') return k.endsWith('m');
+            return true;
+        });
+    }
+
+    function setKeyFilter(value) {
+        settings.keyFilter = value;
+        saveSettings();
+        updateSettingsPillStates();
+        applyKeyFilterToDropdown();
+
+        const current = document.getElementById('keySelect').value;
+        const currentIsMinor = current.endsWith('m');
+        const stillValid = value === 'all' || (value === 'minor' && currentIsMinor) || (value === 'major' && !currentIsMinor);
+        if (!stillValid) {
+            randomizeKey();
+        }
+    }
+
+    function setTestMode(value) {
+        settings.testMode = value;
+        saveSettings();
+        updateSettingsPillStates();
+        applyTestModeToSections();
+        resetBoard();
+    }
+
+    // --- Rush Mode: load/save ---
+    function loadRushData() {
+        const savedScores = localStorage.getItem('musicTrainerRushHighScores');
+        if (savedScores) {
+            rushHighScores = Object.assign(rushHighScores, JSON.parse(savedScores));
+        }
+        const savedDuration = localStorage.getItem('musicTrainerRushDuration');
+        if (savedDuration) {
+            rushDuration = parseInt(savedDuration, 10);
+        }
+    }
+
+    function saveRushHighScores() {
+        localStorage.setItem('musicTrainerRushHighScores', JSON.stringify(rushHighScores));
+    }
+
+    function saveRushDuration() {
+        localStorage.setItem('musicTrainerRushDuration', rushDuration);
+    }
+
+    function updateRushDurationPillStates() {
+        document.querySelectorAll('#rushDurationPills .pill-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.value, 10) === rushDuration);
+        });
+    }
+
+    function updateRushHighScoreDisplay() {
+        document.getElementById('rushHighScoreDisplay').innerText = rushHighScores[rushDuration] || 0;
+    }
+
+    function initUI() {
+        const notesRow = document.getElementById('notesRow');
+        const chordsRow = document.getElementById('chordsRow');
+        
+        notesRow.innerHTML = '';
+        chordsRow.innerHTML = '';
+
+        for (let i = 0; i < 7; i++) {
+            notesRow.innerHTML += `
+                <div class="input-group">
+                    <label>Note ${i + 1}</label>
+                    <input type="text" id="note-${i}" autocomplete="off" class="game-input">
+                </div>
+            `;
+            // REPLACED ROMAN NUMERALS WITH "Chord X"
+            chordsRow.innerHTML += `
+                <div class="input-group">
+                    <label>Chord ${i + 1}</label>
+                    <input type="text" id="chord-${i}" autocomplete="off" class="game-input">
+                </div>
+            `;
+        }
+
+        document.addEventListener('keypress', function (e) {
+            // Don't trigger check if any modal is open
+            if (e.key === 'Enter' && helpModal.style.display !== "flex" && settingsModal.style.display !== "flex" && rushModal.style.display !== "flex") {
+                checkAnswers();
+            }
+        });
+
+        loadSettings();
+        loadRushData();
+        applyKeyFilterToDropdown();
+        applyTestModeToSections();
+        updateSettingsPillStates();
+        updateRushDurationPillStates();
+
+        loadStats();
+        randomizeKey();
+    }
+
+    // --- Core Gameplay Loop ---
+    function manualKeySelect() {
+        resetBoard();
+    }
+
+    function randomizeKey() {
+        const select = document.getElementById('keySelect');
+        const currentVal = select.value;
+        const pool = getFilteredKeyList();
+        let newKey;
+
+        if (pool.length === 1) {
+            newKey = pool[0];
+        } else {
+            do {
+                newKey = pool[Math.floor(Math.random() * pool.length)];
+            } while (newKey === currentVal);
+        }
+
+        select.value = newKey;
+        resetBoard();
+    }
+
+    function resetBoard() {
+        const currentKey = document.getElementById('keySelect').value;
+        const isMinor = currentKey.endsWith('m');
+        const keyLabel = isMinor ? currentKey.slice(0, -1) + " Minor" : currentKey + " Major";
+        document.getElementById('targetKeyTitle').innerText = keyLabel;
+        attemptsOnCurrentKey = 0;
+
+        for (let i = 0; i < 7; i++) {
+            let noteInput = document.getElementById(`note-${i}`);
+            let chordInput = document.getElementById(`chord-${i}`);
+            
+            noteInput.value = '';
+            chordInput.value = '';
+            
+            noteInput.className = 'game-input';
+            chordInput.className = 'game-input';
+            
+            noteInput.style.pointerEvents = 'auto';
+            chordInput.style.pointerEvents = 'auto';
+        }
+        const firstFocusId = (settings.testMode === 'chords') ? 'chord-0' : 'note-0';
+        document.getElementById(firstFocusId).focus();
+    }
+
+    function normalizeInput(str) {
+        return str.trim().toLowerCase().replace(/°/g, 'dim');
+    }
+
+    function checkAnswers() {
+        const currentKey = document.getElementById('keySelect').value;
+        const targetData = keysData[currentKey];
+        const checkNotes = settings.testMode !== 'chords';
+        const checkChords = settings.testMode !== 'scale';
+        let totalCorrect = 0;
+        let totalPossible = 0;
+
+        document.querySelectorAll('.game-input').forEach(el => {
+            el.classList.remove('incorrect');
+            void el.offsetWidth; 
+        });
+
+        for (let i = 0; i < 7; i++) {
+            if (checkNotes) {
+                totalPossible++;
+                let noteInput = document.getElementById(`note-${i}`);
+                let userNote = normalizeInput(noteInput.value);
+                let correctNote = normalizeInput(targetData.notes[i]);
+
+                if (userNote === correctNote) {
+                    noteInput.classList.add('correct');
+                    totalCorrect++;
+                } else {
+                    if (userNote !== "") noteInput.classList.add('incorrect');
+                }
+            }
+
+            if (checkChords) {
+                totalPossible++;
+                let chordInput = document.getElementById(`chord-${i}`);
+                let userChord = normalizeInput(chordInput.value);
+                let correctChord = normalizeInput(targetData.chords[i]);
+
+                if (userChord === correctChord) {
+                    chordInput.classList.add('correct');
+                    totalCorrect++;
+                } else {
+                    if (userChord !== "") chordInput.classList.add('incorrect');
+                }
+            }
+        }
+
+        if (totalCorrect === totalPossible) {
+            if (rushActive) {
+                handleRushCorrect();
+            } else {
+                handleWin();
+            }
+        } else if (!rushActive) {
+            attemptsOnCurrentKey++;
+            if (stats.currentStreak > 0) {
+                stats.currentStreak = 0;
+                saveStats();
+            }
+        }
+        // In Rush Mode a wrong answer just shakes red — no penalty, keep trying against the clock.
+    }
+
+    function handleWin() {
+        if (attemptsOnCurrentKey === 0) {
+            stats.currentStreak++;
+            if (stats.currentStreak > stats.bestStreak) {
+                stats.bestStreak = stats.currentStreak;
+            }
+            stats.xp += 25;
+            spawnConfetti();
+        } else {
+            stats.xp += 10; 
+        }
+
+        saveStats();
+
+        setTimeout(() => {
+            randomizeKey();
+        }, attemptsOnCurrentKey === 0 ? 1500 : 800);
+    }
+
+    function handleGiveUpClick() {
+        if (rushActive) {
+            skipRushKey();
+        } else {
+            revealAnswers();
+        }
+    }
+
+    // --- Rush Mode Gameplay ---
+    function handleRushCorrect() {
+        rushScore++;
+        document.getElementById('rushScoreDisplay').innerText = rushScore;
+        setTimeout(() => {
+            if (rushActive) randomizeKey();
+        }, 250);
+    }
+
+    function skipRushKey() {
+        if (!rushActive) return;
+        randomizeKey();
+    }
+
+    function openRushSetup() {
+        document.getElementById('rushSetupView').style.display = 'block';
+        document.getElementById('rushResultsView').style.display = 'none';
+        updateRushDurationPillStates();
+        updateRushHighScoreDisplay();
+        rushModal.style.display = 'flex';
+    }
+
+    function closeRushModal() {
+        const wasShowingResults = document.getElementById('rushResultsView').style.display !== 'none';
+        rushModal.style.display = 'none';
+        if (wasShowingResults) {
+            randomizeKey();
+        }
+    }
+
+    function setRushDuration(value) {
+        rushDuration = value;
+        saveRushDuration();
+        updateRushDurationPillStates();
+        updateRushHighScoreDisplay();
+    }
+
+    function startRush() {
+        rushModal.style.display = 'none';
+        rushActive = true;
+        rushScore = 0;
+        rushTimeLeft = rushDuration;
+
+        document.body.classList.add('rush-active');
+        document.getElementById('giveUpBtn').innerText = 'Skip →';
+        document.getElementById('rushScoreDisplay').innerText = '0';
+        document.getElementById('rushTimerDisplay').innerText = rushTimeLeft;
+        document.getElementById('rushBestDisplay').innerText = rushHighScores[rushDuration] || 0;
+
+        randomizeKey();
+
+        clearInterval(rushTimerInterval);
+        rushTimerInterval = setInterval(() => {
+            rushTimeLeft--;
+            document.getElementById('rushTimerDisplay').innerText = rushTimeLeft;
+            if (rushTimeLeft <= 0) {
+                endRush();
+            }
+        }, 1000);
+    }
+
+    function endRush() {
+        clearInterval(rushTimerInterval);
+        rushActive = false;
+        document.body.classList.remove('rush-active');
+        document.getElementById('giveUpBtn').innerText = 'Give Up';
+
+        let isNewHigh = false;
+        if (rushScore > (rushHighScores[rushDuration] || 0)) {
+            rushHighScores[rushDuration] = rushScore;
+            isNewHigh = true;
+            saveRushHighScores();
+        }
+
+        document.getElementById('rushResultsTitle').innerText = "Time's Up!";
+        document.getElementById('rushFinalScore').innerText = rushScore;
+        document.getElementById('rushHighScoreNote').innerText = isNewHigh
+            ? '🏆 New High Score!'
+            : `Best: ${rushHighScores[rushDuration] || 0}`;
+
+        document.getElementById('rushSetupView').style.display = 'none';
+        document.getElementById('rushResultsView').style.display = 'block';
+        rushModal.style.display = 'flex';
+
+        if (isNewHigh) spawnConfetti();
+    }
+
+    function revealAnswers() {
+        const currentKey = document.getElementById('keySelect').value;
+        const targetData = keysData[currentKey];
+
+        stats.currentStreak = 0;
+        saveStats();
+
+        for (let i = 0; i < 7; i++) {
+            let noteInput = document.getElementById(`note-${i}`);
+            let chordInput = document.getElementById(`chord-${i}`);
+            
+            noteInput.value = targetData.notes[i];
+            noteInput.className = 'game-input revealed';
+            
+            chordInput.value = targetData.chords[i];
+            chordInput.className = 'game-input revealed';
+        }
+    }
+
+    // --- Juicy Visual Effects ---
+    function spawnConfetti() {
+        const emojis = ['🔥', '⭐', '🎵', '🎹', '✨'];
+        const numConfetti = 30;
+
+        for (let i = 0; i < numConfetti; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = -20 + 'px';
+            
+            const duration = Math.random() * 2 + 1.5;
+            confetti.style.animationDuration = duration + 's';
+            confetti.style.animationDelay = Math.random() * 0.5 + 's';
+
+            document.body.appendChild(confetti);
+
+            setTimeout(() => {
+                confetti.remove();
+            }, duration * 1000 + 500);
+        }
+    }
+
+    window.onload = initUI;
+</script>
+
+</body>
+</html>
